@@ -8,6 +8,20 @@ import '../../models/sync_status.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/sync_provider.dart';
 
+const _accentColors = [
+  Color(0xFFFFFFFF), // white (default)
+  Color(0xFFFFE566), // yellow
+  Color(0xFF5BC0EB), // blue
+  Color(0xFFFE6D73), // pink
+  Color(0xFF7AE582), // green
+  Color(0xFFFFB347), // orange
+  Color(0xFFCDB4DB), // lavender
+  Color(0xFFE0E0E0), // silver
+];
+
+Color _contrastColor(Color c) =>
+    c.computeLuminance() > 0.5 ? const Color(0xFF1A1A1A) : const Color(0xFFFAFAFA);
+
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -16,6 +30,7 @@ class SettingsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final colors = theme.extension<DottrColors>()!;
     final themeMode = ref.watch(themeModeProvider);
+    final accentColor = ref.watch(accentColorProvider);
     final syncStatus = ref.watch(syncStatusProvider);
 
     return Scaffold(
@@ -100,8 +115,8 @@ class SettingsScreen extends ConsumerWidget {
                       icon: Icons.brightness_auto,
                       selected: themeMode == ThemeMode.system,
                       onTap: () => ref
-                          .read(themeModeProvider.notifier)
-                          .state = ThemeMode.system,
+                          .read(settingsProvider.notifier)
+                          .setThemeMode('system'),
                     ),
                     const SizedBox(width: 8),
                     _ThemeOption(
@@ -109,8 +124,8 @@ class SettingsScreen extends ConsumerWidget {
                       icon: Icons.light_mode,
                       selected: themeMode == ThemeMode.light,
                       onTap: () => ref
-                          .read(themeModeProvider.notifier)
-                          .state = ThemeMode.light,
+                          .read(settingsProvider.notifier)
+                          .setThemeMode('light'),
                     ),
                     const SizedBox(width: 8),
                     _ThemeOption(
@@ -118,10 +133,49 @@ class SettingsScreen extends ConsumerWidget {
                       icon: Icons.dark_mode,
                       selected: themeMode == ThemeMode.dark,
                       onTap: () => ref
-                          .read(themeModeProvider.notifier)
-                          .state = ThemeMode.dark,
+                          .read(settingsProvider.notifier)
+                          .setThemeMode('dark'),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                Text('Accent color', style: theme.textTheme.labelLarge),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _accentColors.map((color) {
+                    final selected =
+                        color.toARGB32() == accentColor.toARGB32();
+                    return GestureDetector(
+                      onTap: () => ref
+                          .read(settingsProvider.notifier)
+                          .setAccentColor(color.toARGB32()),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: color,
+                          border: Border.all(
+                            color: theme.colorScheme.outline,
+                            width: selected
+                                ? DottrTheme.borderWidth
+                                : 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            DottrTheme.cardRadius,
+                          ),
+                        ),
+                        child: selected
+                            ? Icon(
+                                Icons.check,
+                                size: 16,
+                                color: _contrastColor(color),
+                              )
+                            : null,
+                      ),
+                    );
+                  }).toList(),
                 ),
               ],
             ),
