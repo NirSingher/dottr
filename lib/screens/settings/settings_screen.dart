@@ -246,6 +246,10 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
+          // On This Day
+          _OnThisDaySettingsCard(),
+          const SizedBox(height: 16),
+
           // Schema manager
           BrutalistCard(
             onTap: () => context.push('/settings/schemas'),
@@ -299,6 +303,149 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OnThisDaySettingsCard extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_OnThisDaySettingsCard> createState() =>
+      _OnThisDaySettingsCardState();
+}
+
+class _OnThisDaySettingsCardState
+    extends ConsumerState<_OnThisDaySettingsCard> {
+  final _tagController = TextEditingController();
+
+  @override
+  void dispose() {
+    _tagController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<DottrColors>()!;
+    final settings = ref.watch(settingsProvider).valueOrNull;
+    if (settings == null) return const SizedBox.shrink();
+
+    return BrutalistCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text('On This Day', style: theme.textTheme.titleLarge),
+              ),
+              Switch(
+                value: settings.onThisDayEnabled,
+                onChanged: (v) =>
+                    ref.read(settingsProvider.notifier).setOnThisDayEnabled(v),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Show entries from previous years on the same date',
+            style: theme.textTheme.bodySmall?.copyWith(color: colors.muted),
+          ),
+          if (settings.onThisDayEnabled) ...[
+            const SizedBox(height: 12),
+            Text('Filter by tags', style: theme.textTheme.labelLarge),
+            const SizedBox(height: 6),
+            if (settings.onThisDayTags.isNotEmpty)
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: settings.onThisDayTags.map((tag) {
+                  return BrutalistChip(
+                    label: '#$tag',
+                    onDelete: () {
+                      final updated = settings.onThisDayTags
+                          .where((t) => t != tag)
+                          .toList();
+                      ref
+                          .read(settingsProvider.notifier)
+                          .setOnThisDayTags(updated);
+                    },
+                  );
+                }).toList(),
+              ),
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 40,
+              child: TextField(
+                controller: _tagController,
+                decoration: InputDecoration(
+                  hintText: 'Add tag filter...',
+                  hintStyle: theme.textTheme.bodySmall,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                textInputAction: TextInputAction.done,
+                onSubmitted: (value) {
+                  final tag = value.trim();
+                  if (tag.isNotEmpty &&
+                      !settings.onThisDayTags.contains(tag)) {
+                    ref.read(settingsProvider.notifier).setOnThisDayTags(
+                      [...settings.onThisDayTags, tag],
+                    );
+                  }
+                  _tagController.clear();
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Daily notification',
+                    style: theme.textTheme.labelLarge,
+                  ),
+                ),
+                Switch(
+                  value: settings.onThisDayNotificationEnabled,
+                  onChanged: (v) => ref
+                      .read(settingsProvider.notifier)
+                      .setOnThisDayNotificationEnabled(v),
+                ),
+              ],
+            ),
+            if (settings.onThisDayNotificationEnabled) ...[
+              const SizedBox(height: 6),
+              GestureDetector(
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay(
+                      hour: settings.onThisDayNotificationHour,
+                      minute: settings.onThisDayNotificationMinute,
+                    ),
+                  );
+                  if (picked != null) {
+                    ref
+                        .read(settingsProvider.notifier)
+                        .setOnThisDayNotificationTime(
+                          picked.hour,
+                          picked.minute,
+                        );
+                  }
+                },
+                child: BrutalistChip(
+                  label:
+                      '${settings.onThisDayNotificationHour.toString().padLeft(2, '0')}:${settings.onThisDayNotificationMinute.toString().padLeft(2, '0')}',
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );

@@ -7,6 +7,7 @@ import '../../providers/entries_provider.dart';
 import '../editor/widgets/template_picker.dart';
 import 'widgets/entry_card.dart';
 import 'widgets/month_header.dart';
+import 'widgets/on_this_day_card.dart';
 
 class TimelineScreen extends ConsumerWidget {
   const TimelineScreen({super.key});
@@ -121,8 +122,11 @@ class _EntryList extends ConsumerWidget {
       onRefresh: () => ref.read(entriesProvider.notifier).refresh(),
       child: ListView.builder(
         padding: const EdgeInsets.only(bottom: 100),
-        itemCount: months.length,
-        itemBuilder: (context, monthIndex) {
+        // +1 for the On This Day card at position 0
+        itemCount: months.length + 1,
+        itemBuilder: (context, index) {
+          if (index == 0) return const OnThisDayCard();
+          final monthIndex = index - 1;
           final monthKey = months[monthIndex];
           final monthEntries = grouped[monthKey]!;
           final sampleDate = monthEntries.first.date;
