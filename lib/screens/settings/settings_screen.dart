@@ -214,6 +214,38 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
+          // Reminders
+          BrutalistCard(
+            onTap: () => context.push('/settings/notifications'),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Reminders',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Recurring notifications to journal',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
           // Schema manager
           BrutalistCard(
             onTap: () => context.push('/settings/schemas'),

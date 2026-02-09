@@ -7,6 +7,8 @@ import 'screens/search/search_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/settings/schema_manager_screen.dart';
 import 'screens/settings/template_manager_screen.dart';
+import 'screens/settings/notification_manager_screen.dart';
+import 'screens/settings/notification_edit_screen.dart';
 import 'screens/tag_browser/tag_browser_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -72,6 +74,19 @@ final router = GoRouter(
       path: '/settings/templates',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const TemplateManagerScreen(),
+    ),
+    GoRoute(
+      path: '/settings/notifications',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const NotificationManagerScreen(),
+    ),
+    GoRoute(
+      path: '/settings/notifications/edit',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) {
+        final configId = state.uri.queryParameters['id'];
+        return NotificationEditScreen(configId: configId);
+      },
     ),
   ],
 );
