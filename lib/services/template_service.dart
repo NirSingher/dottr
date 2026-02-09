@@ -50,22 +50,22 @@ class TemplateService {
     buffer.writeln('templates:');
     for (final template in templates) {
       buffer.writeln('  - id: ${template.id}');
-      buffer.writeln('    name: ${template.name}');
+      buffer.writeln('    name: ${_yamlQuote(template.name)}');
       buffer.writeln('    icon: ${template.icon.codePoint}');
       buffer.writeln('    color: ${template.color.toARGB32()}');
       if (template.tags.isNotEmpty) {
         buffer.writeln('    tags:');
         for (final tag in template.tags) {
-          buffer.writeln('      - $tag');
+          buffer.writeln('      - ${_yamlQuote(tag)}');
         }
       }
       if (template.mood != null) {
-        buffer.writeln('    mood: ${template.mood}');
+        buffer.writeln('    mood: ${_yamlQuote(template.mood!)}');
       }
       if (template.customProperties.isNotEmpty) {
         buffer.writeln('    custom_properties:');
         for (final entry in template.customProperties.entries) {
-          buffer.writeln('      ${entry.key}: ${entry.value}');
+          buffer.writeln('      ${entry.key}: ${_yamlQuote(entry.value)}');
         }
       }
       if (template.body.isNotEmpty) {
@@ -78,5 +78,16 @@ class TemplateService {
     }
     final file = File(_templateFilePath);
     await file.writeAsString(buffer.toString());
+  }
+
+  static final _yamlSpecialChars = RegExp(r'[:#\[\]{}&*!|>%@`]');
+
+  String _yamlQuote(dynamic value) {
+    if (value is bool || value is num) return value.toString();
+    final str = value.toString();
+    if (str.isEmpty || _yamlSpecialChars.hasMatch(str) || str.trimLeft() != str) {
+      return '"${str.replaceAll(r'\', r'\\').replaceAll('"', r'\"')}"';
+    }
+    return str;
   }
 }

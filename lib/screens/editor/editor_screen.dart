@@ -53,10 +53,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
   void _applyTemplate(EditorNotifier editor, String templateId) {
     final templates = ref.read(templateProvider).valueOrNull ?? [];
-    final template = templates.cast<EntryTemplate?>().firstWhere(
-          (t) => t!.id == templateId,
-          orElse: () => null,
-        );
+    final matches = templates.where((t) => t.id == templateId);
+    final EntryTemplate? template = matches.isEmpty ? null : matches.first;
     if (template == null) {
       editor.createNew();
       return;
