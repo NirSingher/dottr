@@ -9,6 +9,7 @@ import 'screens/settings/schema_manager_screen.dart';
 import 'screens/settings/template_manager_screen.dart';
 import 'screens/settings/notification_manager_screen.dart';
 import 'screens/settings/notification_edit_screen.dart';
+import 'screens/settings/import_screen.dart';
 import 'screens/tag_browser/tag_browser_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -87,6 +88,11 @@ final router = GoRouter(
         final configId = state.uri.queryParameters['id'];
         return NotificationEditScreen(configId: configId);
       },
+    ),
+    GoRoute(
+      path: '/settings/import',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const ImportScreen(),
     ),
   ],
 );

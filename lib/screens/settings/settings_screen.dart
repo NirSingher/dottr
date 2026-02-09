@@ -282,6 +282,38 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
+          // Import
+          BrutalistCard(
+            onTap: () => context.push('/settings/import'),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Import',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Import entries from Day One',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
           // About
           BrutalistCard(
             child: Column(
