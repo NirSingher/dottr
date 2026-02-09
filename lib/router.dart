@@ -6,6 +6,7 @@ import 'screens/viewer/viewer_screen.dart';
 import 'screens/search/search_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/settings/schema_manager_screen.dart';
+import 'screens/settings/template_manager_screen.dart';
 import 'screens/tag_browser/tag_browser_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -50,7 +51,8 @@ final router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
         final filePath = state.uri.queryParameters['path'];
-        return EditorScreen(filePath: filePath);
+        final templateId = state.uri.queryParameters['template'];
+        return EditorScreen(filePath: filePath, templateId: templateId);
       },
     ),
     GoRoute(
@@ -65,6 +67,11 @@ final router = GoRouter(
       path: '/settings/schemas',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const SchemaManagerScreen(),
+    ),
+    GoRoute(
+      path: '/settings/templates',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const TemplateManagerScreen(),
     ),
   ],
 );

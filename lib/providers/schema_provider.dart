@@ -1,7 +1,6 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
-import '../core/constants.dart';
+import '../core/utils/platform_path.dart';
 import '../models/property_schema.dart';
 import '../services/schema_service.dart';
 
@@ -19,8 +18,8 @@ class SchemaNotifier extends AsyncNotifier<List<PropertySchema>> {
   @override
   Future<List<PropertySchema>> build() async {
     _schemaService = ref.read(schemaServiceProvider);
-    final dir = await getApplicationDocumentsDirectory();
-    final journalPath = p.join(dir.path, Constants.journalDirName);
+    if (kIsWeb) return []; // No filesystem on web — return empty for UI preview
+    final journalPath = await getJournalBasePath();
     await _schemaService.initialize(journalPath);
     return _schemaService.loadSchemas();
   }

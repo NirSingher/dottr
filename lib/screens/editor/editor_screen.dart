@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/brutalist_components.dart';
+import '../../models/entry.dart';
+import '../../models/template.dart';
 import '../../providers/editor_provider.dart';
 import '../../providers/entries_provider.dart';
+import '../../providers/template_provider.dart';
 import 'widgets/markdown_field.dart';
 import 'widgets/properties_form.dart';
 
 class EditorScreen extends ConsumerStatefulWidget {
   final String? filePath;
+  final String? templateId;
 
-  const EditorScreen({super.key, this.filePath});
+  const EditorScreen({super.key, this.filePath, this.templateId});
 
   @override
   ConsumerState<EditorScreen> createState() => _EditorScreenState();
@@ -40,9 +44,38 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       editor.loadEntry(entry);
       _titleController.text = entry.title;
       _bodyController.text = entry.body;
+    } else if (widget.templateId != null) {
+      _applyTemplate(editor, widget.templateId!);
     } else {
       editor.createNew();
     }
+  }
+
+  void _applyTemplate(EditorNotifier editor, String templateId) {
+    final templates = ref.read(templateProvider).valueOrNull ?? [];
+    final template = templates.cast<EntryTemplate?>().firstWhere(
+          (t) => t!.id == templateId,
+          orElse: () => null,
+        );
+    if (template == null) {
+      editor.createNew();
+      return;
+    }
+    final now = DateTime.now();
+    editor.loadEntry(
+      Entry(
+        title: '',
+        date: now,
+        createdAt: now,
+        updatedAt: now,
+        tags: template.tags,
+        mood: template.mood,
+        customProperties: Map.from(template.customProperties),
+        body: template.body,
+      ),
+    );
+    editor.markDirty();
+    _bodyController.text = template.body;
   }
 
   @override

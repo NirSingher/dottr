@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/brutalist_components.dart';
 import '../../models/entry.dart';
 import '../../providers/entries_provider.dart';
+import '../editor/widgets/template_picker.dart';
 import 'widgets/entry_card.dart';
 import 'widgets/month_header.dart';
 
@@ -45,9 +46,17 @@ class TimelineScreen extends ConsumerWidget {
           return _EntryList(entries: entries);
         },
       ),
-      floatingActionButton: BrutalistFAB(
-        icon: Icons.add,
-        onPressed: () => context.push('/editor'),
+      floatingActionButton: GestureDetector(
+        onLongPress: () async {
+          final template = await showTemplatePicker(context);
+          if (template != null && context.mounted) {
+            context.push('/editor?template=${Uri.encodeComponent(template.id)}');
+          }
+        },
+        child: BrutalistFAB(
+          icon: Icons.add,
+          onPressed: () => context.push('/editor'),
+        ),
       ),
     );
   }

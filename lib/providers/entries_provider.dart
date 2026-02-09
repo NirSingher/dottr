@@ -1,7 +1,6 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
-import '../core/constants.dart';
+import '../core/utils/platform_path.dart';
 import '../models/entry.dart';
 import '../services/file_service.dart';
 import '../services/file_service_impl.dart';
@@ -19,8 +18,8 @@ class EntriesNotifier extends AsyncNotifier<List<Entry>> {
   @override
   Future<List<Entry>> build() async {
     _fileService = ref.read(fileServiceProvider);
-    final dir = await getApplicationDocumentsDirectory();
-    final journalPath = p.join(dir.path, Constants.journalDirName);
+    if (kIsWeb) return []; // No filesystem on web — return empty for UI preview
+    final journalPath = await getJournalBasePath();
     await _fileService.initialize(journalPath);
     return _fileService.listEntries();
   }

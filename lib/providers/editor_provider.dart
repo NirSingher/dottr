@@ -58,6 +58,10 @@ class EditorNotifier extends Notifier<EditorState> {
     );
   }
 
+  void markDirty() {
+    state = state.copyWith(isDirty: true);
+  }
+
   void updateTitle(String title) {
     if (state.entry == null) return;
     state = state.copyWith(
