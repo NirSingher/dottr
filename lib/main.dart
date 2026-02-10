@@ -5,11 +5,16 @@ import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService.instance.init();
-  await NotificationService.instance.requestPermissions();
   runApp(
     const ProviderScope(
       child: DottrApp(),
     ),
   );
+  // Initialize notifications after UI is up so it never blocks rendering
+  try {
+    await NotificationService.instance.init();
+    await NotificationService.instance.requestPermissions();
+  } catch (e) {
+    debugPrint('Notification init failed: $e');
+  }
 }
