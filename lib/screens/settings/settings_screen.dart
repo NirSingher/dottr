@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/config.dart';
 import '../../core/theme/brutalist_components.dart';
-import '../../core/theme/dottl_theme.dart';
+import '../../core/theme/dottr_theme.dart';
 import '../../models/sync_status.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/sync_provider.dart';
@@ -31,7 +30,6 @@ class SettingsScreen extends ConsumerWidget {
     final colors = theme.extension<DottrColors>()!;
     final themeMode = ref.watch(themeModeProvider);
     final accentColor = ref.watch(accentColorProvider);
-    final syncStatus = ref.watch(syncStatusProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -40,65 +38,8 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Sync status
-          BrutalistCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Sync', style: theme.textTheme.titleLarge),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    SyncStatusDot(
-                      color: syncStatus.when(
-                        data: (status) => switch (status) {
-                          SyncStatus.synced => colors.green,
-                          SyncStatus.syncing => colors.accentAlt,
-                          SyncStatus.conflict => colors.pink,
-                          SyncStatus.offline => colors.muted,
-                          SyncStatus.error => theme.colorScheme.error,
-                        },
-                        loading: () => colors.muted,
-                        error: (e, st) => theme.colorScheme.error,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      syncStatus.when(
-                        data: (status) => switch (status) {
-                          SyncStatus.synced => 'Synced',
-                          SyncStatus.syncing => 'Syncing...',
-                          SyncStatus.conflict => 'Conflict detected',
-                          SyncStatus.offline => 'Offline',
-                          SyncStatus.error => 'Sync error',
-                        },
-                        loading: () => 'Checking...',
-                        error: (e, st) => 'Error',
-                      ),
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-                if (GitConfig.isConfigured) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    'Repository configured',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors.muted,
-                    ),
-                  ),
-                ] else ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    'Git not configured. Set GIT_REPO_URL and GIT_PAT at build time.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors.muted,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
+          // Git sync
+          _GitSyncCard(),
           const SizedBox(height: 16),
 
           // Theme
@@ -335,6 +276,162 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GitSyncCard extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_GitSyncCard> createState() => _GitSyncCardState();
+}
+
+class _GitSyncCardState extends ConsumerState<_GitSyncCard> {
+  final _repoUrlController = TextEditingController();
+  final _patController = TextEditingController();
+  bool _connecting = false;
+
+  @override
+  void dispose() {
+    _repoUrlController.dispose();
+    _patController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _connect() async {
+    final repoUrl = _repoUrlController.text.trim();
+    final pat = _patController.text.trim();
+    if (repoUrl.isEmpty || pat.isEmpty) return;
+
+    setState(() => _connecting = true);
+
+    // Save config
+    await ref.read(settingsProvider.notifier).setGitRepoUrl(repoUrl);
+    await ref.read(gitConfigServiceProvider).savePat(pat);
+
+    // Re-trigger sync init
+    ref.invalidate(syncInitProvider);
+
+    if (mounted) setState(() => _connecting = false);
+  }
+
+  Future<void> _disconnect() async {
+    await ref.read(settingsProvider.notifier).setGitRepoUrl('');
+    await ref.read(gitConfigServiceProvider).deletePat();
+    ref.read(syncServiceProvider).stopPolling();
+    ref.read(syncServiceProvider).setStatusExternal(SyncStatus.offline);
+    _repoUrlController.clear();
+    _patController.clear();
+  }
+
+  Future<void> _syncNow() async {
+    await ref.read(syncServiceProvider).sync();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.extension<DottrColors>()!;
+    final syncStatus = ref.watch(syncStatusProvider);
+    final settings = ref.watch(settingsProvider).valueOrNull;
+    final isConfigured = settings != null && settings.gitRepoUrl.isNotEmpty;
+
+    return BrutalistCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Sync', style: theme.textTheme.titleLarge),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              SyncStatusDot(
+                color: syncStatus.when(
+                  data: (status) => switch (status) {
+                    SyncStatus.synced => colors.green,
+                    SyncStatus.syncing => colors.accentAlt,
+                    SyncStatus.conflict => colors.pink,
+                    SyncStatus.offline => colors.muted,
+                    SyncStatus.error => theme.colorScheme.error,
+                  },
+                  loading: () => colors.muted,
+                  error: (e, st) => theme.colorScheme.error,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                syncStatus.when(
+                  data: (status) => switch (status) {
+                    SyncStatus.synced => 'Synced',
+                    SyncStatus.syncing => 'Syncing...',
+                    SyncStatus.conflict => 'Conflict detected',
+                    SyncStatus.offline => 'Offline',
+                    SyncStatus.error => 'Sync error',
+                  },
+                  loading: () => 'Checking...',
+                  error: (e, st) => 'Error',
+                ),
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (isConfigured) ...[
+            Text(
+              settings.gitRepoUrl,
+              style: theme.textTheme.bodySmall?.copyWith(color: colors.muted),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                BrutalistButton(
+                  label: 'Sync Now',
+                  compact: true,
+                  icon: Icons.sync,
+                  onPressed: _syncNow,
+                ),
+                const SizedBox(width: 8),
+                BrutalistButton(
+                  label: 'Disconnect',
+                  compact: true,
+                  color: theme.colorScheme.surface,
+                  onPressed: _disconnect,
+                ),
+              ],
+            ),
+          ] else ...[
+            Text(
+              'Connect a GitHub repository to sync entries across devices.',
+              style: theme.textTheme.bodySmall?.copyWith(color: colors.muted),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _repoUrlController,
+              decoration: const InputDecoration(
+                hintText: 'https://github.com/user/repo.git',
+                isDense: true,
+              ),
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _patController,
+              decoration: const InputDecoration(
+                hintText: 'Personal access token',
+                isDense: true,
+              ),
+              obscureText: true,
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            BrutalistButton(
+              label: _connecting ? 'Connecting...' : 'Connect',
+              icon: Icons.link,
+              compact: true,
+              onPressed: _connecting ? null : _connect,
+            ),
+          ],
         ],
       ),
     );

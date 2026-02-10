@@ -4,6 +4,9 @@ class AppSettings {
   final String themeMode; // 'system', 'light', 'dark'
   final int accentColor;
 
+  // Git sync
+  final String gitRepoUrl;
+
   // On This Day settings (Feature 4)
   final bool onThisDayEnabled;
   final List<String> onThisDayTags;
@@ -14,6 +17,7 @@ class AppSettings {
   const AppSettings({
     this.themeMode = 'system',
     this.accentColor = 0xFFFFFFFF,
+    this.gitRepoUrl = '',
     this.onThisDayEnabled = true,
     this.onThisDayTags = const [],
     this.onThisDayNotificationEnabled = false,
@@ -32,6 +36,7 @@ class AppSettings {
   AppSettings copyWith({
     String? themeMode,
     int? accentColor,
+    String? gitRepoUrl,
     bool? onThisDayEnabled,
     List<String>? onThisDayTags,
     bool? onThisDayNotificationEnabled,
@@ -41,6 +46,7 @@ class AppSettings {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
       accentColor: accentColor ?? this.accentColor,
+      gitRepoUrl: gitRepoUrl ?? this.gitRepoUrl,
       onThisDayEnabled: onThisDayEnabled ?? this.onThisDayEnabled,
       onThisDayTags: onThisDayTags ?? this.onThisDayTags,
       onThisDayNotificationEnabled:
@@ -55,6 +61,7 @@ class AppSettings {
   Map<String, dynamic> toJson() => {
         'themeMode': themeMode,
         'accentColor': accentColor,
+        'gitRepoUrl': gitRepoUrl,
         'onThisDayEnabled': onThisDayEnabled,
         'onThisDayTags': onThisDayTags,
         'onThisDayNotificationEnabled': onThisDayNotificationEnabled,
@@ -66,6 +73,7 @@ class AppSettings {
     return AppSettings(
       themeMode: json['themeMode'] as String? ?? 'system',
       accentColor: json['accentColor'] as int? ?? 0xFFFFFFFF,
+      gitRepoUrl: json['gitRepoUrl'] as String? ?? '',
       onThisDayEnabled: json['onThisDayEnabled'] as bool? ?? true,
       onThisDayTags:
           (json['onThisDayTags'] as List?)?.cast<String>() ?? const [],

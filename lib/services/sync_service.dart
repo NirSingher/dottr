@@ -20,6 +20,9 @@ class SyncService {
     _statusController.add(status);
   }
 
+  /// Allow external callers (e.g. sync provider init) to set status.
+  void setStatusExternal(SyncStatus status) => _setStatus(status);
+
   Future<void> startPolling() async {
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(Constants.syncPollInterval, (_) => sync());

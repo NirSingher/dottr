@@ -39,6 +39,11 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _update(current.copyWith(accentColor: color));
   }
 
+  Future<void> setGitRepoUrl(String url) async {
+    final current = state.valueOrNull ?? const AppSettings();
+    await _update(current.copyWith(gitRepoUrl: url));
+  }
+
   Future<void> setOnThisDayEnabled(bool enabled) async {
     final current = state.valueOrNull ?? const AppSettings();
     await _update(current.copyWith(onThisDayEnabled: enabled));

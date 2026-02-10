@@ -25,9 +25,10 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   timezone: ^0.10.0
   shared_preferences: ^2.3.4
-  archive: ^4.0.2
+  archive: ^3.6.1
   file_picker: ^8.1.7
   flutter_timezone: ^5.0.1
+  git_on_dart: ^0.1.4
 
 dev_dependencies:
   flutter_test:
