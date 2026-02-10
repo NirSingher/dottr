@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../core/theme/brutalist_components.dart';
-import '../../core/theme/dottl_theme.dart';
+import '../../core/theme/dottr_theme.dart';
 import '../../providers/entries_provider.dart';
 import '../../services/import/day_one_import_service.dart';
 

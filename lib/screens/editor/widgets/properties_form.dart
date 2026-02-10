@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/brutalist_components.dart';
-import '../../../core/theme/dottl_theme.dart';
+import '../../../core/theme/dottr_theme.dart';
 import '../../../models/property_schema.dart';
 import '../../../providers/editor_provider.dart';
 import '../../../providers/schema_provider.dart';

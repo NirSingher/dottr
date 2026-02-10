@@ -1,6 +1,15 @@
 # Environment / secrets
 .env
 
+# Claude Code
+.claude/
+
+# Android signing
+key.properties
+*.jks
+*.keystore
+android/local.properties
+
 # Miscellaneous
 *.class
 *.log

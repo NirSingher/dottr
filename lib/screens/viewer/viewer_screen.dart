@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/brutalist_components.dart';
-import '../../core/theme/dottl_theme.dart';
+import '../../core/theme/dottr_theme.dart';
 import '../../providers/entries_provider.dart';
 
 class ViewerScreen extends ConsumerWidget {

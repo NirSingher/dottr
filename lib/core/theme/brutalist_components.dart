@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dottl_theme.dart';
+import 'dottr_theme.dart';
 
 class BrutalistCard extends StatelessWidget {
   final Widget child;

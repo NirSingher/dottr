@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build macOS
+        run: flutter build macos
+
+      - name: Zip app
+        run: |
+          cd build/macos/Build/Products/Release
+          zip -r dottr-macos.zip dottr.app
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dottr-macos
+          path: build/macos/Build/Products/Release/dottr-macos.zip
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dottr-android
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  release:
+    needs: [build-macos, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dottr-macos
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dottr-android
+
+      - name: Rename Android APK
+        run: mv app-release.apk dottr-android.apk
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dottr-macos.zip
+            dottr-android.apk

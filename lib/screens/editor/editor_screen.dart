@@ -78,10 +78,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
   @override
   void dispose() {
-    // Save before leaving
-    final editor = ref.read(editorProvider.notifier);
-    editor.save();
-    editor.clear();
     _titleController.dispose();
     _bodyController.dispose();
     super.dispose();

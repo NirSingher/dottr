@@ -6,7 +6,6 @@ class DottrTheme {
   static const _black = Color(0xFF1A1A1A);
   static const _white = Color(0xFFFAFAFA);
   static const _cream = Color(0xFFF5F0EB);
-  static const _yellow = Color(0xFFFFE566);
   static const _blue = Color(0xFF4D9DE0);
   static const _pink = Color(0xFFFF6B9D);
   static const _green = Color(0xFF7BC67E);
@@ -82,15 +81,15 @@ class DottrTheme {
     );
   }
 
-  static ThemeData light() {
+  static ThemeData light({Color accent = _white}) {
     return ThemeData(
       brightness: Brightness.light,
       scaffoldBackgroundColor: _cream,
       textTheme: _textTheme(Brightness.light),
-      colorScheme: const ColorScheme.light(
+      colorScheme: ColorScheme.light(
         primary: _black,
         onPrimary: _white,
-        secondary: _yellow,
+        secondary: accent,
         onSecondary: _black,
         tertiary: _blue,
         error: _red,
@@ -117,11 +116,11 @@ class DottrTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: _yellow,
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: accent,
         foregroundColor: _black,
         elevation: 0,
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(cardRadius)),
           side: BorderSide(color: _black, width: borderWidth),
         ),
@@ -161,9 +160,9 @@ class DottrTheme {
         color: _lightGray,
         thickness: 1,
       ),
-      extensions: const [
+      extensions: [
         DottrColors(
-          accent: _yellow,
+          accent: accent,
           accentAlt: _blue,
           pink: _pink,
           green: _green,
@@ -174,15 +173,15 @@ class DottrTheme {
     );
   }
 
-  static ThemeData dark() {
+  static ThemeData dark({Color accent = _white}) {
     return ThemeData(
       brightness: Brightness.dark,
       scaffoldBackgroundColor: _darkSurface,
       textTheme: _textTheme(Brightness.dark),
-      colorScheme: const ColorScheme.dark(
+      colorScheme: ColorScheme.dark(
         primary: _white,
         onPrimary: _black,
-        secondary: _yellow,
+        secondary: accent,
         onSecondary: _black,
         tertiary: _blue,
         error: _red,
@@ -202,18 +201,18 @@ class DottrTheme {
           color: _white,
         ),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: _darkCard,
-        selectedItemColor: _yellow,
+        selectedItemColor: accent,
         unselectedItemColor: _gray,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: _yellow,
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: accent,
         foregroundColor: _black,
         elevation: 0,
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(cardRadius)),
           side: BorderSide(color: _white, width: borderWidth),
         ),
@@ -253,9 +252,9 @@ class DottrTheme {
         color: _darkGray,
         thickness: 1,
       ),
-      extensions: const [
+      extensions: [
         DottrColors(
-          accent: _yellow,
+          accent: accent,
           accentAlt: _blue,
           pink: _pink,
           green: _green,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/brutalist_components.dart';
-import '../../../core/theme/dottl_theme.dart';
+import '../../../core/theme/dottr_theme.dart';
 import '../../../models/entry.dart';
 
 class EntryCard extends StatelessWidget {

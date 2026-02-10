@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/brutalist_components.dart';
-import '../../core/theme/dottl_theme.dart';
+import '../../core/theme/dottr_theme.dart';
 import '../../providers/entries_provider.dart';
 import '../timeline/widgets/entry_card.dart';
 
