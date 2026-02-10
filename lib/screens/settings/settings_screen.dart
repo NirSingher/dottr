@@ -581,7 +581,7 @@ class _OnThisDaySettingsCardState
   }
 }
 
-class _ThemeOption extends StatelessWidget {
+class _ThemeOption extends StatefulWidget {
   final String label;
   final IconData icon;
   final bool selected;
@@ -595,35 +595,56 @@ class _ThemeOption extends StatelessWidget {
   });
 
   @override
+  State<_ThemeOption> createState() => _ThemeOptionState();
+}
+
+class _ThemeOptionState extends State<_ThemeOption> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final baseColor = widget.selected
+        ? theme.colorScheme.secondary
+        : theme.colorScheme.surface;
+    final bgColor = _hovered && !widget.selected
+        ? Color.alphaBlend(
+            theme.colorScheme.onSurface.withAlpha(20), baseColor)
+        : baseColor;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? theme.colorScheme.secondary
-              : theme.colorScheme.surface,
-          border: Border.all(
-            color: theme.colorScheme.outline,
-            width: selected ? DottrTheme.borderWidth : 1.5,
-          ),
-          borderRadius: BorderRadius.circular(DottrTheme.cardRadius),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 18),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-              ),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: bgColor,
+            border: Border.all(
+              color: theme.colorScheme.outline,
+              width: (widget.selected || _hovered)
+                  ? DottrTheme.borderWidth
+                  : 1.5,
             ),
-          ],
+            borderRadius: BorderRadius.circular(DottrTheme.cardRadius),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(widget.icon, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                widget.label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: widget.selected ? FontWeight.w700 : FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

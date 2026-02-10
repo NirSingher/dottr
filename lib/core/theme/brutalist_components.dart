@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dottr_theme.dart';
 
-class BrutalistCard extends StatelessWidget {
+class BrutalistCard extends StatefulWidget {
   final Widget child;
   final EdgeInsets? padding;
   final Color? color;
@@ -16,40 +16,60 @@ class BrutalistCard extends StatelessWidget {
   });
 
   @override
+  State<BrutalistCard> createState() => _BrutalistCardState();
+}
+
+class _BrutalistCardState extends State<BrutalistCard> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<DottrColors>()!;
-    final cardColor = color ?? theme.colorScheme.surface;
+    final cardColor = widget.color ?? theme.colorScheme.surface;
+    final interactive = widget.onTap != null;
+    final pressed = interactive && _hovered;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: padding ?? const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: cardColor,
-          border: Border.all(
-            color: theme.colorScheme.outline,
-            width: DottrTheme.borderWidth,
-          ),
-          borderRadius: BorderRadius.circular(DottrTheme.cardRadius),
-          boxShadow: [
-            BoxShadow(
-              color: colors.shadow,
-              offset: const Offset(
-                DottrTheme.shadowOffset,
-                DottrTheme.shadowOffset,
-              ),
-              blurRadius: 0,
+    return MouseRegion(
+      cursor: interactive ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: interactive ? (_) => setState(() => _hovered = true) : null,
+      onExit: interactive ? (_) => setState(() => _hovered = false) : null,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          padding: widget.padding ?? const EdgeInsets.all(16),
+          transform: pressed
+              ? Matrix4.translationValues(
+                  DottrTheme.shadowOffset - 1, DottrTheme.shadowOffset - 1, 0)
+              : Matrix4.identity(),
+          decoration: BoxDecoration(
+            color: cardColor,
+            border: Border.all(
+              color: theme.colorScheme.outline,
+              width: DottrTheme.borderWidth,
             ),
-          ],
+            borderRadius: BorderRadius.circular(DottrTheme.cardRadius),
+            boxShadow: [
+              BoxShadow(
+                color: colors.shadow,
+                offset: Offset(
+                  pressed ? 1 : DottrTheme.shadowOffset,
+                  pressed ? 1 : DottrTheme.shadowOffset,
+                ),
+                blurRadius: 0,
+              ),
+            ],
+          ),
+          child: widget.child,
         ),
-        child: child,
       ),
     );
   }
 }
 
-class BrutalistButton extends StatelessWidget {
+class BrutalistButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final Color? color;
@@ -66,56 +86,76 @@ class BrutalistButton extends StatelessWidget {
   });
 
   @override
+  State<BrutalistButton> createState() => _BrutalistButtonState();
+}
+
+class _BrutalistButtonState extends State<BrutalistButton> {
+  bool _hovered = false;
+  static const double _shadow = 3;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.extension<DottrColors>()!;
-    final bgColor = color ?? theme.colorScheme.secondary;
+    final bgColor = widget.color ?? theme.colorScheme.secondary;
+    final interactive = widget.onPressed != null;
+    final pressed = interactive && _hovered;
 
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 12 : 20,
-          vertical: compact ? 8 : 12,
-        ),
-        decoration: BoxDecoration(
-          color: bgColor,
-          border: Border.all(
-            color: theme.colorScheme.outline,
-            width: DottrTheme.borderWidth,
+    return MouseRegion(
+      cursor: interactive ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: interactive ? (_) => setState(() => _hovered = true) : null,
+      onExit: interactive ? (_) => setState(() => _hovered = false) : null,
+      child: GestureDetector(
+        onTap: widget.onPressed,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.compact ? 12 : 20,
+            vertical: widget.compact ? 8 : 12,
           ),
-          borderRadius: BorderRadius.circular(DottrTheme.cardRadius),
-          boxShadow: [
-            BoxShadow(
-              color: colors.shadow,
-              offset: const Offset(3, 3),
-              blurRadius: 0,
+          transform: pressed
+              ? Matrix4.translationValues(_shadow - 1, _shadow - 1, 0)
+              : Matrix4.identity(),
+          decoration: BoxDecoration(
+            color: bgColor,
+            border: Border.all(
+              color: theme.colorScheme.outline,
+              width: DottrTheme.borderWidth,
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: compact ? 16 : 20, color: theme.colorScheme.onSecondary),
-              SizedBox(width: compact ? 6 : 8),
-            ],
-            Text(
-              label,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                fontSize: compact ? 13 : 15,
-                color: theme.colorScheme.onSecondary,
+            borderRadius: BorderRadius.circular(DottrTheme.cardRadius),
+            boxShadow: [
+              BoxShadow(
+                color: colors.shadow,
+                offset: Offset(pressed ? 1 : _shadow, pressed ? 1 : _shadow),
+                blurRadius: 0,
               ),
-            ),
-          ],
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.icon != null) ...[
+                Icon(widget.icon, size: widget.compact ? 16 : 20, color: theme.colorScheme.onSecondary),
+                SizedBox(width: widget.compact ? 6 : 8),
+              ],
+              Text(
+                widget.label,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: widget.compact ? 13 : 15,
+                  color: theme.colorScheme.onSecondary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class BrutalistChip extends StatelessWidget {
+class BrutalistChip extends StatefulWidget {
   final String label;
   final Color? color;
   final VoidCallback? onTap;
@@ -130,40 +170,61 @@ class BrutalistChip extends StatelessWidget {
   });
 
   @override
+  State<BrutalistChip> createState() => _BrutalistChipState();
+}
+
+class _BrutalistChipState extends State<BrutalistChip> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final interactive = widget.onTap != null;
+    final pressed = interactive && _hovered;
+    final baseColor = widget.color ?? theme.colorScheme.surface;
+    final bgColor = pressed
+        ? Color.alphaBlend(
+            theme.colorScheme.onSurface.withAlpha(20), baseColor)
+        : baseColor;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: color ?? theme.colorScheme.surface,
-          border: Border.all(
-            color: theme.colorScheme.outline,
-            width: 1.5,
-          ),
-          borderRadius: BorderRadius.circular(DottrTheme.cardRadius),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: theme.textTheme.labelMedium,
+    return MouseRegion(
+      cursor: interactive ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: interactive ? (_) => setState(() => _hovered = true) : null,
+      onExit: interactive ? (_) => setState(() => _hovered = false) : null,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: bgColor,
+            border: Border.all(
+              color: theme.colorScheme.outline,
+              width: pressed ? DottrTheme.borderWidth : 1.5,
             ),
-            if (onDelete != null) ...[
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: onDelete,
-                child: Icon(
-                  Icons.close,
-                  size: 14,
-                  color: theme.colorScheme.onSurface,
-                ),
+            borderRadius: BorderRadius.circular(DottrTheme.cardRadius),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.label,
+                style: theme.textTheme.labelMedium,
               ),
+              if (widget.onDelete != null) ...[
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: widget.onDelete,
+                  child: Icon(
+                    Icons.close,
+                    size: 14,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
