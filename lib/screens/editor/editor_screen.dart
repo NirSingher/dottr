@@ -13,8 +13,14 @@ import 'widgets/properties_form.dart';
 class EditorScreen extends ConsumerStatefulWidget {
   final String? filePath;
   final String? templateId;
+  final String? defaultJournal;
 
-  const EditorScreen({super.key, this.filePath, this.templateId});
+  const EditorScreen({
+    super.key,
+    this.filePath,
+    this.templateId,
+    this.defaultJournal,
+  });
 
   @override
   ConsumerState<EditorScreen> createState() => _EditorScreenState();
@@ -47,7 +53,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     } else if (widget.templateId != null) {
       _applyTemplate(editor, widget.templateId!);
     } else {
-      editor.createNew();
+      editor.createNew(defaultJournal: widget.defaultJournal);
     }
   }
 

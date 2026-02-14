@@ -1,21 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/brutalist_components.dart';
 import '../../../core/theme/dottr_theme.dart';
 import '../../../models/entry.dart';
+import '../../../providers/journal_provider.dart';
 
-class EntryCard extends StatelessWidget {
+class EntryCard extends ConsumerWidget {
   final Entry entry;
   final VoidCallback? onTap;
 
   const EntryCard({super.key, required this.entry, this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.extension<DottrColors>()!;
     final dateStr = DateFormat('MMM d').format(entry.date);
     final timeStr = entry.time ?? DateFormat('HH:mm').format(entry.date);
+
+    // Resolve journal color
+    Color? journalColor;
+    if (entry.journal != null) {
+      final journals = ref.watch(journalProvider).valueOrNull ?? [];
+      final match = journals.where((j) => j.name == entry.journal);
+      if (match.isNotEmpty) journalColor = match.first.color;
+    }
 
     return BrutalistCard(
       onTap: onTap,
@@ -41,6 +51,21 @@ class EntryCard extends StatelessWidget {
               if (entry.mood != null) ...[
                 const SizedBox(width: 8),
                 Text(entry.mood!, style: const TextStyle(fontSize: 14)),
+              ],
+              if (journalColor != null) ...[
+                const SizedBox(width: 8),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: journalColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: theme.colorScheme.outline,
+                      width: 1,
+                    ),
+                  ),
+                ),
               ],
               const Spacer(),
               if (entry.hasConflict)

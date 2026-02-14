@@ -43,12 +43,26 @@ class EntriesNotifier extends AsyncNotifier<List<Entry>> {
   }
 }
 
-final filteredEntriesProvider = Provider.family<AsyncValue<List<Entry>>, String?>(
-  (ref, tag) {
+final filteredEntriesProvider =
+    Provider.family<AsyncValue<List<Entry>>, ({String? tag, String? journal})>(
+  (ref, filter) {
     final entries = ref.watch(entriesProvider);
-    if (tag == null || tag.isEmpty) return entries;
+    final hasTag = filter.tag != null && filter.tag!.isNotEmpty;
+    final hasJournal = filter.journal != null && filter.journal!.isNotEmpty;
+    if (!hasTag && !hasJournal) return entries;
     return entries.whenData(
-      (list) => list.where((e) => e.tags.contains(tag)).toList(),
+      (list) {
+        var filtered = list;
+        if (hasJournal) {
+          filtered =
+              filtered.where((e) => e.journal == filter.journal).toList();
+        }
+        if (hasTag) {
+          filtered =
+              filtered.where((e) => e.tags.contains(filter.tag)).toList();
+        }
+        return filtered;
+      },
     );
   },
 );

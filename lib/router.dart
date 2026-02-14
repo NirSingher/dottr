@@ -10,6 +10,8 @@ import 'screens/settings/template_manager_screen.dart';
 import 'screens/settings/notification_manager_screen.dart';
 import 'screens/settings/notification_edit_screen.dart';
 import 'screens/settings/import_screen.dart';
+import 'widgets/journal_drawer.dart';
+import 'screens/settings/journal_manager_screen.dart';
 import 'screens/tag_browser/tag_browser_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -55,7 +57,12 @@ final router = GoRouter(
       builder: (context, state) {
         final filePath = state.uri.queryParameters['path'];
         final templateId = state.uri.queryParameters['template'];
-        return EditorScreen(filePath: filePath, templateId: templateId);
+        final journalName = state.uri.queryParameters['journal'];
+        return EditorScreen(
+          filePath: filePath,
+          templateId: templateId,
+          defaultJournal: journalName,
+        );
       },
     ),
     GoRoute(
@@ -75,6 +82,11 @@ final router = GoRouter(
       path: '/settings/templates',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const TemplateManagerScreen(),
+    ),
+    GoRoute(
+      path: '/settings/journals',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const JournalManagerScreen(),
     ),
     GoRoute(
       path: '/settings/notifications',
@@ -116,6 +128,7 @@ class AppShell extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
+      drawer: const JournalDrawer(),
       body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

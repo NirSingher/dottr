@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/brutalist_components.dart';
 import '../../core/theme/dottr_theme.dart';
 import '../../providers/entries_provider.dart';
+import '../../providers/journal_provider.dart';
 import '../timeline/widgets/entry_card.dart';
 
 final _selectedTagProvider = StateProvider<String?>((ref) => null);
@@ -15,7 +16,10 @@ class TagBrowserScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.extension<DottrColors>()!;
-    final entriesAsync = ref.watch(entriesProvider);
+    final selectedJournal = ref.watch(selectedJournalProvider);
+    final entriesAsync = ref.watch(
+      filteredEntriesProvider((tag: null, journal: selectedJournal)),
+    );
     final selectedTag = ref.watch(_selectedTagProvider);
 
     return Scaffold(

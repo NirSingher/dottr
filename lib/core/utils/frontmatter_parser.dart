@@ -10,6 +10,7 @@ class FrontmatterParser {
     'time',
     'tags',
     'mood',
+    'journal',
     'location',
     'created_at',
     'updated_at',
@@ -68,6 +69,7 @@ class FrontmatterParser {
       time: frontmatter['time']?.toString(),
       tags: _parseTags(frontmatter['tags']),
       mood: frontmatter['mood']?.toString(),
+      journal: frontmatter['journal']?.toString(),
       location: frontmatter['location']?.toString(),
       createdAt: _parseDateTime(frontmatter['created_at']) ?? now,
       updatedAt: _parseDateTime(frontmatter['updated_at']) ?? now,
@@ -93,6 +95,9 @@ class FrontmatterParser {
     }
     if (entry.mood != null) {
       buffer.writeln('mood: ${_yamlString(entry.mood!)}');
+    }
+    if (entry.journal != null) {
+      buffer.writeln('journal: ${_yamlString(entry.journal!)}');
     }
     if (entry.location != null) {
       buffer.writeln('location: ${_yamlString(entry.location!)}');

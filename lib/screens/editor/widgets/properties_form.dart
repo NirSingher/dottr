@@ -5,6 +5,7 @@ import '../../../core/theme/brutalist_components.dart';
 import '../../../core/theme/dottr_theme.dart';
 import '../../../models/property_schema.dart';
 import '../../../providers/editor_provider.dart';
+import '../../../providers/journal_provider.dart';
 import '../../../providers/schema_provider.dart';
 
 class PropertiesForm extends ConsumerStatefulWidget {
@@ -143,6 +144,10 @@ class _PropertiesFormState extends ConsumerState<PropertiesForm> {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+
+        // Journal
+        _JournalSelector(),
         const SizedBox(height: 12),
 
         // Location
@@ -352,5 +357,59 @@ class _CustomPropertyField extends ConsumerWidget {
           ),
         );
     }
+  }
+}
+
+class _JournalSelector extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final editorState = ref.watch(editorProvider);
+    final journalsAsync = ref.watch(journalProvider);
+    final journals = journalsAsync.valueOrNull ?? [];
+
+    if (journals.isEmpty) return const SizedBox.shrink();
+
+    final hasInlineJournal = editorState.inlineJournal != null;
+    final currentJournal = editorState.effectiveJournal;
+
+    if (hasInlineJournal) {
+      // Show as read-only chip when set via inline syntax
+      return _PropertyRow(
+        label: 'Journal',
+        child: BrutalistChip(
+          label: '~$currentJournal',
+          color: theme.colorScheme.secondary,
+        ),
+      );
+    }
+
+    return _PropertyRow(
+      label: 'Journal',
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        children: [
+          BrutalistChip(
+            label: 'None',
+            color: currentJournal == null
+                ? theme.colorScheme.secondary
+                : null,
+            onTap: () =>
+                ref.read(editorProvider.notifier).updateJournal(null),
+          ),
+          ...journals.map((journal) {
+            final selected = currentJournal == journal.name;
+            return BrutalistChip(
+              label: journal.name,
+              color: selected ? journal.color : null,
+              onTap: () => ref
+                  .read(editorProvider.notifier)
+                  .updateJournal(journal.name),
+            );
+          }),
+        ],
+      ),
+    );
   }
 }

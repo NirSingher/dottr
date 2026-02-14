@@ -12,31 +12,47 @@ class EditorState {
   final bool isDirty;
   final bool isSaving;
   final Set<String> manualTags;
+  final String? manualJournal;
+  final String? inlineJournal;
 
   const EditorState({
     this.entry,
     this.isDirty = false,
     this.isSaving = false,
     this.manualTags = const {},
+    this.manualJournal,
+    this.inlineJournal,
   });
+
+  String? get effectiveJournal => inlineJournal ?? manualJournal;
 
   EditorState copyWith({
     Entry? entry,
     bool? isDirty,
     bool? isSaving,
     Set<String>? manualTags,
+    String? manualJournal,
+    String? inlineJournal,
+    bool clearManualJournal = false,
+    bool clearInlineJournal = false,
   }) {
     return EditorState(
       entry: entry ?? this.entry,
       isDirty: isDirty ?? this.isDirty,
       isSaving: isSaving ?? this.isSaving,
       manualTags: manualTags ?? this.manualTags,
+      manualJournal:
+          clearManualJournal ? null : (manualJournal ?? this.manualJournal),
+      inlineJournal:
+          clearInlineJournal ? null : (inlineJournal ?? this.inlineJournal),
     );
   }
 }
 
 class EditorNotifier extends Notifier<EditorState> {
   static final _inlineTagPattern = RegExp(r'(?:^|\s)#(\w+)');
+  static final _inlineJournalPattern =
+      RegExp(r'(?:^|\s)(?:~\[([^\]]+)\]|~(\w+))');
 
   final _debouncer = Debouncer(delay: Constants.autoSaveDelay);
 
@@ -55,6 +71,15 @@ class EditorNotifier extends Notifier<EditorState> {
         .toSet();
   }
 
+  /// Extract inline journal from body text. Last match wins.
+  static String? extractInlineJournal(String body) {
+    String? journal;
+    for (final match in _inlineJournalPattern.allMatches(body)) {
+      journal = match.group(1) ?? match.group(2);
+    }
+    return journal;
+  }
+
   List<String> _mergeTags(Set<String> manual, Set<String> inline) {
     return {...manual, ...inline}.toList();
   }
@@ -62,10 +87,24 @@ class EditorNotifier extends Notifier<EditorState> {
   void loadEntry(Entry entry) {
     final inlineTags = extractInlineTags(entry.body);
     final manualTags = entry.tags.toSet().difference(inlineTags);
-    state = EditorState(entry: entry, manualTags: manualTags);
+    final inlineJournal = extractInlineJournal(entry.body);
+    // If the stored journal matches inline, it came from inline.
+    // Otherwise it's a manual selection.
+    final String? manualJournal;
+    if (entry.journal != null && entry.journal != inlineJournal) {
+      manualJournal = entry.journal;
+    } else {
+      manualJournal = null;
+    }
+    state = EditorState(
+      entry: entry,
+      manualTags: manualTags,
+      manualJournal: manualJournal,
+      inlineJournal: inlineJournal,
+    );
   }
 
-  void createNew() {
+  void createNew({String? defaultJournal}) {
     final now = DateTime.now();
     state = EditorState(
       entry: Entry(
@@ -73,7 +112,9 @@ class EditorNotifier extends Notifier<EditorState> {
         date: now,
         createdAt: now,
         updatedAt: now,
+        journal: defaultJournal,
       ),
+      manualJournal: defaultJournal,
     );
   }
 
@@ -94,9 +135,29 @@ class EditorNotifier extends Notifier<EditorState> {
     if (state.entry == null) return;
     final inlineTags = extractInlineTags(body);
     final merged = _mergeTags(state.manualTags, inlineTags);
-    state = state.copyWith(
-      entry: state.entry!.copyWith(body: body, tags: merged),
+    final inlineJournal = extractInlineJournal(body);
+    final effectiveJournal = inlineJournal ?? state.manualJournal;
+    final e = state.entry!;
+    state = EditorState(
+      entry: Entry(
+        filePath: e.filePath,
+        title: e.title,
+        date: e.date,
+        time: e.time,
+        tags: merged,
+        mood: e.mood,
+        journal: effectiveJournal,
+        location: e.location,
+        createdAt: e.createdAt,
+        updatedAt: e.updatedAt,
+        customProperties: e.customProperties,
+        body: body,
+        hasConflict: e.hasConflict,
+      ),
       isDirty: true,
+      manualTags: state.manualTags,
+      manualJournal: state.manualJournal,
+      inlineJournal: inlineJournal,
     );
     _scheduleAutoSave();
   }
@@ -128,6 +189,34 @@ class EditorNotifier extends Notifier<EditorState> {
     state = state.copyWith(
       entry: state.entry!.copyWith(location: location),
       isDirty: true,
+    );
+    _scheduleAutoSave();
+  }
+
+  void updateJournal(String? journal) {
+    if (state.entry == null) return;
+    final effective = state.inlineJournal ?? journal;
+    final e = state.entry!;
+    state = EditorState(
+      entry: Entry(
+        filePath: e.filePath,
+        title: e.title,
+        date: e.date,
+        time: e.time,
+        tags: e.tags,
+        mood: e.mood,
+        journal: effective,
+        location: e.location,
+        createdAt: e.createdAt,
+        updatedAt: e.updatedAt,
+        customProperties: e.customProperties,
+        body: e.body,
+        hasConflict: e.hasConflict,
+      ),
+      isDirty: true,
+      manualTags: state.manualTags,
+      manualJournal: journal,
+      inlineJournal: state.inlineJournal,
     );
     _scheduleAutoSave();
   }

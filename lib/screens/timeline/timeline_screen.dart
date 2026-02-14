@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/brutalist_components.dart';
 import '../../models/entry.dart';
 import '../../providers/entries_provider.dart';
+import '../../providers/journal_provider.dart';
 import '../editor/widgets/template_picker.dart';
 import 'widgets/entry_card.dart';
 import 'widgets/month_header.dart';
@@ -14,12 +15,19 @@ class TimelineScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entriesAsync = ref.watch(entriesProvider);
+    final selectedJournal = ref.watch(selectedJournalProvider);
+    final entriesAsync = ref.watch(
+      filteredEntriesProvider((tag: null, journal: selectedJournal)),
+    );
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('dottr'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+        title: Text(selectedJournal ?? 'dottr'),
       ),
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -51,12 +59,22 @@ class TimelineScreen extends ConsumerWidget {
         onLongPress: () async {
           final template = await showTemplatePicker(context);
           if (template != null && context.mounted) {
-            context.push('/editor?template=${Uri.encodeComponent(template.id)}');
+            final journalParam = selectedJournal != null
+                ? '&journal=${Uri.encodeComponent(selectedJournal)}'
+                : '';
+            context.push(
+              '/editor?template=${Uri.encodeComponent(template.id)}$journalParam',
+            );
           }
         },
         child: BrutalistFAB(
           icon: Icons.add,
-          onPressed: () => context.push('/editor'),
+          onPressed: () {
+            final journalParam = selectedJournal != null
+                ? '?journal=${Uri.encodeComponent(selectedJournal)}'
+                : '';
+            context.push('/editor$journalParam');
+          },
         ),
       ),
     );

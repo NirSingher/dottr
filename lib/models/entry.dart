@@ -5,6 +5,7 @@ class Entry {
   final String? time;
   final List<String> tags;
   final String? mood;
+  final String? journal;
   final String? location;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -19,6 +20,7 @@ class Entry {
     this.time,
     this.tags = const [],
     this.mood,
+    this.journal,
     this.location,
     required this.createdAt,
     required this.updatedAt,
@@ -34,6 +36,7 @@ class Entry {
     String? time,
     List<String>? tags,
     String? mood,
+    String? journal,
     String? location,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -48,6 +51,7 @@ class Entry {
       time: time ?? this.time,
       tags: tags ?? this.tags,
       mood: mood ?? this.mood,
+      journal: journal ?? this.journal,
       location: location ?? this.location,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:uuid/uuid.dart';
 import '../../core/theme/brutalist_components.dart';
 import '../../core/theme/dottr_theme.dart';
+import '../../models/journal.dart';
 import '../../providers/entries_provider.dart';
+import '../../providers/journal_provider.dart';
 import '../../services/import/day_one_import_service.dart';
 
 class ImportScreen extends ConsumerStatefulWidget {
@@ -74,6 +77,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                   const SizedBox(height: 8),
                   _ResultRow(label: 'Total entries', value: '${_result!.total}'),
                   _ResultRow(label: 'Imported', value: '${_result!.imported}'),
+                  if (_result!.journalNames.isNotEmpty)
+                    _ResultRow(
+                      label: 'Journals',
+                      value: _result!.journalNames.join(', '),
+                    ),
                   if (_result!.skipped > 0)
                     _ResultRow(label: 'Skipped', value: '${_result!.skipped}'),
                   if (_result!.errors.isNotEmpty) ...[
@@ -134,6 +142,36 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     try {
       final service = DayOneImportService();
       final (entries, importResult) = await service.parseZip(filePath);
+
+      // Auto-create journals for discovered names
+      if (importResult.journalNames.isNotEmpty) {
+        final existingJournals =
+            ref.read(journalProvider).valueOrNull ?? [];
+        final existingNames =
+            existingJournals.map((j) => j.name.toLowerCase()).toSet();
+        const autoColors = [
+          Color(0xFFFFDE59),
+          Color(0xFF5BC0EB),
+          Color(0xFFFE6D73),
+          Color(0xFF7AE582),
+          Color(0xFFFFB347),
+          Color(0xFFCDB4DB),
+          Color(0xFFE0E0E0),
+        ];
+        var colorIndex = existingJournals.length;
+        for (final name in importResult.journalNames) {
+          if (!existingNames.contains(name.toLowerCase())) {
+            await ref.read(journalProvider.notifier).addJournal(
+                  Journal(
+                    id: const Uuid().v4(),
+                    name: name,
+                    color: autoColors[colorIndex % autoColors.length],
+                  ),
+                );
+            colorIndex++;
+          }
+        }
+      }
 
       // Save each entry via the entries provider
       final notifier = ref.read(entriesProvider.notifier);

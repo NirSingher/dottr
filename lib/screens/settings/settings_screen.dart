@@ -123,6 +123,38 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
+          // Journals
+          BrutalistCard(
+            onTap: () => context.push('/settings/journals'),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Journals',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Organize entries into named journals',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
           // Templates
           BrutalistCard(
             onTap: () => context.push('/settings/templates'),
