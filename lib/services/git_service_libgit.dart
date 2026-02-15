@@ -27,7 +27,8 @@ class GitServiceLibgit implements GitService {
 
   git.HttpsCredentials? _credentials(String? pat) {
     if (pat == null || pat.isEmpty) return null;
-    return git.HttpsCredentials.token(pat);
+    // GitHub expects PAT as password via basic auth, not as bearer token
+    return git.HttpsCredentials.basic('x-access-token', pat);
   }
 
   void _ensureInitialized() {
@@ -83,8 +84,17 @@ class GitServiceLibgit implements GitService {
     _ensureRepo();
     final pushOp = git.PushOperation(_repo!);
     final creds = _credentials(pat);
-    final result = await pushOp.push('origin', credentials: creds);
+    var result = await pushOp.push('origin', credentials: creds);
     if (!result.success) {
+      // First push may need explicit refspec — try main then master
+      for (final branch in ['main', 'master']) {
+        result = await pushOp.push(
+          'origin',
+          credentials: creds,
+          refspec: 'refs/heads/$branch:refs/heads/$branch',
+        );
+        if (result.success) return;
+      }
       throw GitException(
         'git push failed',
         stderr: result.error,

@@ -58,13 +58,75 @@ class GitServiceImpl implements GitService {
   @override
   Future<void> pull({String? pat}) async {
     _ensureInitialized();
-    await _run(['pull', '--rebase', '--autostash']);
+    try {
+      await _run(['pull', '--no-rebase', '--allow-unrelated-histories']);
+    } on GitException catch (e) {
+      if (e.isConflict) {
+        await _resolveConflictsKeepBoth();
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  /// Resolve merge conflicts by keeping both versions.
+  /// Local version is saved as `<name>-local-<timestamp>.md`,
+  /// remote version wins the original filename.
+  Future<void> _resolveConflictsKeepBoth() async {
+    final result = await Process.run(
+      'git',
+      ['-C', _repoPath!, 'diff', '--name-only', '--diff-filter=U'],
+    );
+    final conflicted = result.stdout
+        .toString()
+        .trim()
+        .split('\n')
+        .where((f) => f.isNotEmpty)
+        .toList();
+
+    for (final file in conflicted) {
+      // Save our version as a timestamped copy
+      final ours = await Process.run(
+        'git',
+        ['-C', _repoPath!, 'show', ':2:$file'],
+      );
+      if (ours.exitCode == 0) {
+        final dot = file.lastIndexOf('.');
+        final base = dot > 0 ? file.substring(0, dot) : file;
+        final ext = dot > 0 ? file.substring(dot) : '';
+        final ts = DateTime.now().millisecondsSinceEpoch;
+        await File('$_repoPath/$base-local-$ts$ext')
+            .writeAsString(ours.stdout.toString());
+      }
+
+      // Accept theirs for the original path
+      await Process.run(
+        'git',
+        ['-C', _repoPath!, 'checkout', '--theirs', file],
+      );
+    }
+
+    // Stage everything and finalize the merge
+    await _run(['add', '-A']);
+    await _run([
+      'commit',
+      '-m',
+      'Merge: keep both versions of conflicted files',
+    ]);
+    developer.log(
+      'GitService: resolved ${conflicted.length} conflict(s) — kept both versions',
+    );
   }
 
   @override
   Future<void> push({String? pat}) async {
     _ensureInitialized();
-    await _run(['push']);
+    try {
+      await _run(['push']);
+    } on GitException {
+      // First push — set upstream
+      await _run(['push', '-u', 'origin', 'main']);
+    }
   }
 
   @override
@@ -104,7 +166,8 @@ class GitServiceImpl implements GitService {
   @override
   Future<void> initRepo() async {
     _ensureInitialized();
-    final result = await Process.run('git', ['init', _repoPath!]);
+    final result =
+        await Process.run('git', ['init', '-b', 'main', _repoPath!]);
     if (result.exitCode != 0) {
       throw GitException(
         'git init failed',

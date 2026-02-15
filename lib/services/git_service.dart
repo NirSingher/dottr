@@ -44,5 +44,10 @@ class GitException implements Exception {
           stderr!.contains('authentication'));
 
   @override
-  String toString() => 'GitException: $message (exit $exitCode)';
+  String toString() {
+    final parts = ['GitException: $message'];
+    if (exitCode != null) parts.add('(exit $exitCode)');
+    if (stderr != null && stderr!.isNotEmpty) parts.add('— $stderr');
+    return parts.join(' ');
+  }
 }

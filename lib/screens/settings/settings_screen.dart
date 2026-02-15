@@ -432,6 +432,24 @@ class _GitSyncCardState extends ConsumerState<_GitSyncCard> {
                 ),
               ],
             ),
+            Builder(builder: (context) {
+              final syncSvc = ref.read(syncServiceProvider);
+              if (syncSvc.lastError != null &&
+                  syncStatus.valueOrNull == SyncStatus.error) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    syncSvc.lastError!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            }),
           ] else ...[
             Text(
               'Connect a GitHub repository to sync entries across devices.',

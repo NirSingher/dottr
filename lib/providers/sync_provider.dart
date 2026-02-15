@@ -6,8 +6,8 @@ import '../core/utils/platform_path.dart';
 import '../models/sync_status.dart';
 import '../services/git_config_service.dart';
 import '../services/git_service.dart';
+import '../services/git_service_github_api.dart';
 import '../services/git_service_impl.dart';
-import '../services/git_service_libgit.dart';
 import '../services/sync_service.dart';
 import 'settings_provider.dart';
 
@@ -16,10 +16,10 @@ final gitConfigServiceProvider = Provider<GitConfigService>((ref) {
 });
 
 final gitServiceProvider = Provider<GitService>((ref) {
-  // iOS/Android: use pure-Dart git_on_dart (no git binary needed)
+  // iOS/Android: use GitHub REST API (git_on_dart's remote ops are incomplete)
   // macOS/Linux/Windows: use Process.run('git', ...) for full git CLI
   if (!kIsWeb && (Platform.isIOS || Platform.isAndroid)) {
-    return GitServiceLibgit();
+    return GitServiceGithubApi();
   }
   return GitServiceImpl();
 });
@@ -66,6 +66,9 @@ final syncInitProvider = FutureProvider<void>((ref) async {
 
   final journalPath = await getJournalBasePath();
 
+  // Store PAT in sync service so subsequent sync() calls can authenticate
+  syncService.setPat(pat);
+
   try {
     await gitService.initialize(journalPath);
 
@@ -77,7 +80,12 @@ final syncInitProvider = FutureProvider<void>((ref) async {
       if (hasOrigin) {
         // Update remote with current PAT and pull
         await gitService.setRemoteUrl(repoUrl, pat: pat);
-        await gitService.pull(pat: pat);
+        try {
+          await gitService.pull(pat: pat);
+        } on GitException catch (e) {
+          // Pull may fail on empty remote or unrelated histories — not fatal
+          developer.log('SyncInit: pull failed (non-fatal): $e');
+        }
       } else {
         // Local repo with no remote — add origin and push
         await gitService.setRemoteUrl(repoUrl, pat: pat);
@@ -89,14 +97,33 @@ final syncInitProvider = FutureProvider<void>((ref) async {
         await gitService.push(pat: pat);
       }
     } else {
-      // No repo — clone from remote
-      await gitService.clone(repoUrl, journalPath, pat: pat);
+      // No .git but directory exists with files — init in place,
+      // commit existing entries, then push to remote.
+      await gitService.initRepo();
       await gitService.configUser('Dottr', 'dottr@local');
+      await gitService.setRemoteUrl(repoUrl, pat: pat);
+
+      // Commit any existing local files
+      if (await gitService.hasChanges()) {
+        await gitService.addAll();
+        await gitService.commit('Initial import from Dottr');
+      }
+
+      // Try to pull remote content (may be empty repo — that's OK)
+      try {
+        await gitService.pull(pat: pat);
+      } on GitException catch (e) {
+        developer.log('SyncInit: pull after init failed (non-fatal): $e');
+      }
+
+      // Push local content to remote
+      await gitService.push(pat: pat);
     }
 
     syncService.startPolling();
   } on GitException catch (e) {
     developer.log('SyncInit error: $e');
+    syncService.lastError = '${e.message}${e.stderr != null ? ': ${e.stderr}' : ''}';
     if (e.isConflict) {
       syncService.setStatusExternal(SyncStatus.conflict);
     } else {
@@ -104,6 +131,7 @@ final syncInitProvider = FutureProvider<void>((ref) async {
     }
   } catch (e) {
     developer.log('SyncInit unexpected error: $e');
+    syncService.lastError = e.toString();
     syncService.setStatusExternal(SyncStatus.error);
   }
 });
